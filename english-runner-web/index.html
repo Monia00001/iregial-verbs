@@ -1,38 +1,19 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-    <meta charset="UTF-8">
-    <title>English Runner</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<title>English Runner</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="menu">
-        <h1>English Runner</h1>
-        <button onclick="startGame('easy')">Легко</button>
-        <button onclick="startGame('normal')">Нормально</button>
-        <button onclick="startGame('hard')">Складно</button>
-    </div>
+<div id="menu">
+  <h1>English Runner</h1>
+  <button onclick="startGame()">Почати гру</button>
+  <button onclick="showHighScores()">Рекорди</button>
+</div>
 
-    <div id="game-container" class="hidden">
-        <div id="stats">
-            <span id="lives"></span> | 
-            <span id="score"></span> | 
-            <span id="combo"></span>
-        </div>
-        <canvas id="gameCanvas" width="800" height="400"></canvas>
-        <div id="slowmo" class="hidden">
-            <p id="verbPrompt"></p>
-            <input type="text" id="verbInput">
-            <button onclick="checkVerb()">Відповісти</button>
-        </div>
-    </div>
+<canvas id="gameCanvas" width="800" height="400" style="display:none;"></canvas>
 
-    <div id="game-over" class="hidden">
-        <h2>Кінець гри</h2>
-        <p id="final-score"></p>
-        <button onclick="restartGame()">Почати знову</button>
-    </div>
-
-    <script src="game.js"></script>
+<script src="game.js"></script>
 </body>
 </html>
