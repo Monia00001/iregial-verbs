@@ -1,10 +1,38 @@
 body {
-    font-family: Arial, sans-serif;
-    text-align: center;
-    background: #f0f0f0;
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #1e3c72; 
+  color: white;
 }
-.hidden { display: none; }
-#gameCanvas { border: 2px solid #333; background: #a0d8f0; margin-top: 20px; }
-#slowmo { margin-top: 20px; }
-button { padding: 10px 20px; margin: 10px; font-size: 16px; cursor: pointer; }
-#stats { font-size: 18px; margin-top: 10px; }
+
+#menu {
+  text-align: center;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #1e3c72, #2a5298);
+}
+
+#menu h1 {
+  font-size: 4rem;
+  margin-bottom: 40px;
+}
+
+#menu button {
+  font-size: 1.5rem;
+  padding: 15px 40px;
+  margin: 10px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: #ffcc00;
+  color: #333;
+}
+
+#menu button:hover {
+  transform: scale(1.1);
+  background: #ffd633;
+}
