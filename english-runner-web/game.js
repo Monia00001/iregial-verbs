@@ -1,20 +1,12 @@
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
-// FULLSCREEN
-function resizeCanvas() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-}
-window.addEventListener("resize", resizeCanvas);
-resizeCanvas();
-
 // ГРАВЕЦЬ
 let player = {
-  lane: 1, // 0 = left, 1 = center, 2 = right
+  lane: 1,
   width: 50,
   height: 50,
-  y: canvas.height - 100
+  y: 0
 };
 
 // ШВИДКІСТЬ
@@ -25,42 +17,54 @@ let acceleration = 0.01;
 // ПЕРЕШКОДИ
 let obstacles = [];
 
+// FULLSCREEN + ФІКС ПОЗИЦІЇ
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  // оновлюємо позицію гравця після resize
+  player.y = canvas.height - 120;
+}
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas();
+
+// SPAWN
 function spawnObstacle() {
   let lane = Math.floor(Math.random() * 3);
+
   obstacles.push({
     lane: lane,
-    y: -50,
+    y: -60,
     width: 50,
     height: 50
   });
 }
-
 setInterval(spawnObstacle, 1500);
 
 // КЕРУВАННЯ
 document.addEventListener("keydown", (e) => {
-  if (e.key === "a" && player.lane > 0) {
+  if ((e.key === "a" || e.key === "A") && player.lane > 0) {
     player.lane--;
   }
-  if (e.key === "d" && player.lane < 2) {
+  if ((e.key === "d" || e.key === "D") && player.lane < 2) {
     player.lane++;
   }
 });
 
-// ОНОВЛЕННЯ
+// UPDATE
 function update() {
   speed += acceleration;
   if (speed > maxSpeed) speed = maxSpeed;
 
-  obstacles.forEach(o => {
-    o.y += speed;
-  });
+  for (let i = 0; i < obstacles.length; i++) {
+    obstacles[i].y += speed;
+  }
 
-  // видалення старих
-  obstacles = obstacles.filter(o => o.y < canvas.height + 50);
+  // очищаємо
+  obstacles = obstacles.filter(o => o.y < canvas.height + 100);
 }
 
-// МАЛЮВАННЯ
+// DRAW
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -73,10 +77,10 @@ function draw() {
 
   // перешкоди
   ctx.fillStyle = "red";
-  obstacles.forEach(o => {
+  for (let o of obstacles) {
     let x = o.lane * laneWidth + laneWidth / 2 - o.width / 2;
     ctx.fillRect(x, o.y, o.width, o.height);
-  });
+  }
 }
 
 // LOOP
