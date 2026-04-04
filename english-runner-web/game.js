@@ -8,15 +8,47 @@ window.addEventListener('DOMContentLoaded', () => {
     let gameRunning = false;
     let gameSpeed = 4;
 
+    // 🎮 ГРАВЕЦЬ
     let player = { x: 50, y: 300, width: 50, height: 50, vy: 0, gravity: 0.6, jumpPower: -12 };
     let isJumping = false;
 
+    // 👾 ВОРОГИ
     let enemies = [{ x: 800, y: 300, width: 50, height: 50 }];
 
+    // ❤️ СТАТИ
     let score = 0;
     let lives = 3;
 
-    // 🔹 СТАРТ
+    // 📚 ДІЄСЛОВА
+    const verbs = [
+        { base: "go", past: "went" },
+        { base: "eat", past: "ate" },
+        { base: "see", past: "saw" },
+        { base: "take", past: "took" },
+        { base: "come", past: "came" },
+        { base: "make", past: "made" }
+    ];
+
+    let currentVerb = null;
+    let options = [];
+    let correctIndex = 0;
+
+    // 🎯 ГЕНЕРАЦІЯ ПИТАННЯ
+    function generateQuestion() {
+        currentVerb = verbs[Math.floor(Math.random() * verbs.length)];
+
+        let wrong;
+        do {
+            wrong = verbs[Math.floor(Math.random() * verbs.length)].past;
+        } while (wrong === currentVerb.past);
+
+        options = [currentVerb.past, wrong];
+        options.sort(() => Math.random() - 0.5);
+
+        correctIndex = options.indexOf(currentVerb.past);
+    }
+
+    // ▶️ СТАРТ
     startBtn.addEventListener('click', () => {
         menu.style.display = 'none';
         canvas.style.display = 'block';
@@ -25,17 +57,19 @@ window.addEventListener('DOMContentLoaded', () => {
         score = 0;
         lives = 3;
 
+        generateQuestion();
+
         enemies.forEach(e => e.x = 800);
 
         requestAnimationFrame(gameLoop);
     });
 
-    // 🔹 РЕКОРДИ
+    // 🏆 РЕКОРДИ
     scoresBtn.addEventListener('click', () => {
-        alert("Скоро тут будуть рекорди 😎");
+        alert("Скоро будуть рекорди 😎");
     });
 
-    // 🔹 СТРИБОК
+    // ⬆️ СТРИБОК
     document.addEventListener('keydown', e => {
         if (e.code === 'Space' && !isJumping) {
             player.vy = player.jumpPower;
@@ -43,7 +77,31 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 🔴 ПЕРЕВІРКА ЗІТКНЕННЯ
+    // ⬅️➡️ ВИБІР ВІДПОВІДІ
+    document.addEventListener('keydown', e => {
+        if (!gameRunning) return;
+
+        if (e.code === 'ArrowLeft') {
+            checkAnswer(0);
+        }
+
+        if (e.code === 'ArrowRight') {
+            checkAnswer(1);
+        }
+    });
+
+    // ✔️❌ ПЕРЕВІРКА
+    function checkAnswer(index) {
+        if (index === correctIndex) {
+            score += 2;
+        } else {
+            lives--;
+        }
+
+        generateQuestion();
+    }
+
+    // 🔴 ЗІТКНЕННЯ
     function isColliding(a, b) {
         return a.x < b.x + b.width &&
                a.x + a.width > b.x &&
@@ -51,12 +109,13 @@ window.addEventListener('DOMContentLoaded', () => {
                a.y + a.height > b.y;
     }
 
+    // 🔁 ГОЛОВНИЙ ЦИКЛ
     function gameLoop() {
         if (!gameRunning) return;
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Рух гравця
+        // рух гравця
         player.vy += player.gravity;
         player.y += player.vy;
 
@@ -66,20 +125,19 @@ window.addEventListener('DOMContentLoaded', () => {
             isJumping = false;
         }
 
-        // Гравець
+        // гравець
         ctx.fillStyle = 'green';
         ctx.fillRect(player.x, player.y, player.width, player.height);
 
-        // Вороги
+        // вороги
         enemies.forEach(e => {
             e.x -= gameSpeed;
 
             if (e.x + e.width < 0) {
                 e.x = 800;
-                score++; // 🔥 додаємо бали
+                score++;
             }
 
-            // 🔴 зіткнення
             if (isColliding(player, e)) {
                 lives--;
                 e.x = 800;
@@ -95,9 +153,16 @@ window.addEventListener('DOMContentLoaded', () => {
             ctx.fillRect(e.x, e.y, e.width, e.height);
         });
 
-        // UI
+        // 📚 ТЕКСТ ПИТАННЯ
         ctx.fillStyle = 'white';
+        ctx.font = '28px Arial';
+        ctx.fillText(`${currentVerb.base} → ?`, 300, 50);
+
         ctx.font = '20px Arial';
+        ctx.fillText(`← ${options[0]}`, 250, 100);
+        ctx.fillText(`${options[1]} →`, 450, 100);
+
+        // UI
         ctx.fillText(`Бали: ${score}`, 10, 30);
         ctx.fillText(`Життя: ${lives}`, 10, 60);
 
