@@ -1,38 +1,11 @@
-body {
+html, body {
   margin: 0;
-  font-family: Arial, sans-serif;
-  background: #1e3c72; 
-  color: white;
+  padding: 0;
+  overflow: hidden;
+  height: 100%;
+  background: black;
 }
 
-#menu {
-  text-align: center;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  background: linear-gradient(135deg, #1e3c72, #2a5298);
-}
-
-#menu h1 {
-  font-size: 4rem;
-  margin-bottom: 40px;
-}
-
-#menu button {
-  font-size: 1.5rem;
-  padding: 15px 40px;
-  margin: 10px;
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  background: #ffcc00;
-  color: #333;
-}
-
-#menu button:hover {
-  transform: scale(1.1);
-  background: #ffd633;
+canvas {
+  display: block;
 }
