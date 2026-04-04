@@ -2,22 +2,21 @@ window.addEventListener('DOMContentLoaded', () => {
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const startBtn = document.getElementById('startBtn');
-    const scoresBtn = document.getElementById('scoresBtn');
     const menu = document.getElementById('menu');
 
     let gameRunning = false;
-    let gameSpeed = 4;
+    let speed = 5;
+
+    // 🧍 ЛІНІЇ
+    const lanes = [200, 350, 500];
+    let currentLane = 1;
 
     // 🎮 ГРАВЕЦЬ
-    let player = { x: 50, y: 300, width: 50, height: 50, vy: 0, gravity: 0.6, jumpPower: -12 };
-    let isJumping = false;
-
-    // 👾 ВОРОГИ
-    let enemies = [{ x: 800, y: 300, width: 50, height: 50 }];
-
-    // ❤️ СТАТИ
-    let score = 0;
-    let lives = 3;
+    const player = {
+        x: lanes[currentLane],
+        y: 300,
+        size: 40
+    };
 
     // 📚 ДІЄСЛОВА
     const verbs = [
@@ -26,26 +25,42 @@ window.addEventListener('DOMContentLoaded', () => {
         { base: "see", past: "saw" },
         { base: "take", past: "took" },
         { base: "come", past: "came" },
-        { base: "make", past: "made" }
+        { base: "make", past: "made" },
+        { base: "find", past: "found" }
     ];
 
+    let obstacles = [];
     let currentVerb = null;
-    let options = [];
-    let correctIndex = 0;
+    let correctLane = 0;
 
-    // 🎯 ГЕНЕРАЦІЯ ПИТАННЯ
-    function generateQuestion() {
+    let score = 0;
+    let lives = 3;
+
+    // 🎯 СТВОРЕННЯ ПИТАННЯ
+    function spawnQuestion() {
         currentVerb = verbs[Math.floor(Math.random() * verbs.length)];
 
-        let wrong;
-        do {
-            wrong = verbs[Math.floor(Math.random() * verbs.length)].past;
-        } while (wrong === currentVerb.past);
+        let answers = [currentVerb.past];
 
-        options = [currentVerb.past, wrong];
-        options.sort(() => Math.random() - 0.5);
+        // додаємо неправильні
+        while (answers.length < 3) {
+            let random = verbs[Math.floor(Math.random() * verbs.length)].past;
+            if (!answers.includes(random)) {
+                answers.push(random);
+            }
+        }
 
-        correctIndex = options.indexOf(currentVerb.past);
+        // перемішуємо
+        answers.sort(() => Math.random() - 0.5);
+
+        correctLane = answers.indexOf(currentVerb.past);
+
+        obstacles = answers.map((text, i) => ({
+            x: lanes[i],
+            y: -50,
+            text: text,
+            lane: i
+        }));
     }
 
     // ▶️ СТАРТ
@@ -57,114 +72,78 @@ window.addEventListener('DOMContentLoaded', () => {
         score = 0;
         lives = 3;
 
-        generateQuestion();
-
-        enemies.forEach(e => e.x = 800);
-
+        spawnQuestion();
         requestAnimationFrame(gameLoop);
     });
 
-    // 🏆 РЕКОРДИ
-    scoresBtn.addEventListener('click', () => {
-        alert("Скоро будуть рекорди 😎");
-    });
-
-    // ⬆️ СТРИБОК
-    document.addEventListener('keydown', e => {
-        if (e.code === 'Space' && !isJumping) {
-            player.vy = player.jumpPower;
-            isJumping = true;
-        }
-    });
-
-    // ⬅️➡️ ВИБІР ВІДПОВІДІ
+    // 🎮 КЕРУВАННЯ
     document.addEventListener('keydown', e => {
         if (!gameRunning) return;
 
-        if (e.code === 'ArrowLeft') {
-            checkAnswer(0);
+        if (e.code === 'ArrowLeft' && currentLane > 0) {
+            currentLane--;
         }
 
-        if (e.code === 'ArrowRight') {
-            checkAnswer(1);
+        if (e.code === 'ArrowRight' && currentLane < 2) {
+            currentLane++;
         }
     });
 
-    // ✔️❌ ПЕРЕВІРКА
-    function checkAnswer(index) {
-        if (index === correctIndex) {
-            score += 2;
-        } else {
-            lives--;
-        }
-
-        generateQuestion();
-    }
-
-    // 🔴 ЗІТКНЕННЯ
-    function isColliding(a, b) {
-        return a.x < b.x + b.width &&
-               a.x + a.width > b.x &&
-               a.y < b.y + b.height &&
-               a.y + a.height > b.y;
-    }
-
-    // 🔁 ГОЛОВНИЙ ЦИКЛ
+    // 🔁 ГРА
     function gameLoop() {
         if (!gameRunning) return;
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // рух гравця
-        player.vy += player.gravity;
-        player.y += player.vy;
+        // оновлюємо позицію гравця
+        player.x = lanes[currentLane];
 
-        if (player.y > 300) {
-            player.y = 300;
-            player.vy = 0;
-            isJumping = false;
-        }
+        // 🧍 гравець
+        ctx.fillStyle = 'lime';
+        ctx.fillRect(player.x - 20, player.y, player.size, player.size);
 
-        // гравець
-        ctx.fillStyle = 'green';
-        ctx.fillRect(player.x, player.y, player.width, player.height);
+        // 📚 слово
+        ctx.fillStyle = 'white';
+        ctx.font = '28px Arial';
+        ctx.fillText(`${currentVerb.base} → ?`, 300, 40);
 
-        // вороги
-        enemies.forEach(e => {
-            e.x -= gameSpeed;
+        // 🚧 варіанти
+        obstacles.forEach(o => {
+            o.y += speed;
 
-            if (e.x + e.width < 0) {
-                e.x = 800;
-                score++;
-            }
+            // малюємо блок
+            ctx.fillStyle = 'red';
+            ctx.fillRect(o.x - 50, o.y, 100, 40);
 
-            if (isColliding(player, e)) {
-                lives--;
-                e.x = 800;
+            ctx.fillStyle = 'white';
+            ctx.font = '16px Arial';
+            ctx.fillText(o.text, o.x - 30, o.y + 25);
+
+            // 🔴 зіткнення
+            if (
+                o.y > player.y &&
+                o.y < player.y + 40 &&
+                o.lane === currentLane
+            ) {
+                if (o.lane === correctLane) {
+                    score += 5;
+                } else {
+                    lives--;
+                }
 
                 if (lives <= 0) {
                     gameRunning = false;
-                    alert("Гра закінчена! Бали: " + score);
+                    alert("Game Over! Score: " + score);
                     location.reload();
                 }
-            }
 
-            ctx.fillStyle = 'red';
-            ctx.fillRect(e.x, e.y, e.width, e.height);
+                spawnQuestion();
+            }
         });
 
-        // 📚 ТЕКСТ ПИТАННЯ
-        ctx.fillStyle = 'white';
-        ctx.font = '28px Arial';
-        ctx.fillText(`${currentVerb.base} → ?`, 300, 50);
-
-        ctx.font = '20px Arial';
-        ctx.fillText(`← ${options[0]}`, 250, 100);
-        ctx.fillText(`${options[1]} →`, 450, 100);
-
         // UI
-        ctx.fillText(`Бали: ${score}`, 10, 30);
-        ctx.fillText(`Життя: ${lives}`, 10, 60);
+        ctx.fillText(`Score: ${score}`, 10, 30);
+        ctx.fillText(`Lives: ${lives}`, 10, 60);
 
         requestAnimationFrame(gameLoop);
     }
