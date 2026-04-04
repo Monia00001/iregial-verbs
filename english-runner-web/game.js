@@ -1,93 +1,58 @@
 const canvas = document.getElementById("game");
+
+if (!canvas) {
+  alert("Canvas не знайдений!");
+}
+
 const ctx = canvas.getContext("2d");
 
-// ГРАВЕЦЬ
+// resize
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+window.addEventListener("resize", resize);
+resize();
+
+// гравець
 let player = {
   lane: 1,
-  width: 50,
-  height: 50,
+  width: 60,
+  height: 60,
   y: 0
 };
 
-// ШВИДКІСТЬ
-let speed = 2;
-let maxSpeed = 12;
-let acceleration = 0.01;
+// після resize ставимо позицію
+player.y = canvas.height - 120;
 
-// ПЕРЕШКОДИ
-let obstacles = [];
-
-// FULLSCREEN + ФІКС ПОЗИЦІЇ
-function resizeCanvas() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-
-  // оновлюємо позицію гравця після resize
-  player.y = canvas.height - 120;
-}
-window.addEventListener("resize", resizeCanvas);
-resizeCanvas();
-
-// SPAWN
-function spawnObstacle() {
-  let lane = Math.floor(Math.random() * 3);
-
-  obstacles.push({
-    lane: lane,
-    y: -60,
-    width: 50,
-    height: 50
-  });
-}
-setInterval(spawnObstacle, 1500);
-
-// КЕРУВАННЯ
+// рух
 document.addEventListener("keydown", (e) => {
-  if ((e.key === "a" || e.key === "A") && player.lane > 0) {
-    player.lane--;
-  }
-  if ((e.key === "d" || e.key === "D") && player.lane < 2) {
-    player.lane++;
-  }
+  if (e.key === "a" && player.lane > 0) player.lane--;
+  if (e.key === "d" && player.lane < 2) player.lane++;
 });
 
-// UPDATE
-function update() {
-  speed += acceleration;
-  if (speed > maxSpeed) speed = maxSpeed;
-
-  for (let i = 0; i < obstacles.length; i++) {
-    obstacles[i].y += speed;
-  }
-
-  // очищаємо
-  obstacles = obstacles.filter(o => o.y < canvas.height + 100);
-}
-
-// DRAW
+// draw
 function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "black";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   let laneWidth = canvas.width / 3;
 
-  // гравець
-  let playerX = player.lane * laneWidth + laneWidth / 2 - player.width / 2;
+  let x = player.lane * laneWidth + laneWidth / 2 - player.width / 2;
+
   ctx.fillStyle = "lime";
-  ctx.fillRect(playerX, player.y, player.width, player.height);
+  ctx.fillRect(x, player.y, player.width, player.height);
 
-  // перешкоди
-  ctx.fillStyle = "red";
-  for (let o of obstacles) {
-    let x = o.lane * laneWidth + laneWidth / 2 - o.width / 2;
-    ctx.fillRect(x, o.y, o.width, o.height);
-  }
+  // DEBUG TEXT (щоб точно бачити що працює)
+  ctx.fillStyle = "white";
+  ctx.font = "20px Arial";
+  ctx.fillText("GAME WORKS", 20, 40);
 }
 
-// LOOP
-function gameLoop() {
-  update();
+// loop
+function loop() {
   draw();
-  requestAnimationFrame(gameLoop);
+  requestAnimationFrame(loop);
 }
 
-gameLoop();
+loop();
