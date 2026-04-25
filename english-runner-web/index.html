@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Irregular Verbs Game</title>
+    <title>Irregular Verbs Pro</title>
     <style>
         body {
             background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
@@ -11,93 +11,207 @@
             font-family: 'Segoe UI', sans-serif;
             margin: 0;
             display: flex;
-            flex-direction: column;
+            justify-content: center;
             align-items: center;
             min-height: 100vh;
-            padding: 20px;
-        }
-
-        h1 {
-            color: #38bdf8;
-            margin-bottom: 30px;
+            overflow: hidden;
         }
 
         .container {
             background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
+            backdrop-filter: blur(15px);
+            border-radius: 24px;
             border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            max-width: 800px;
+            padding: 40px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+        }
+
+        h1 { color: #38bdf8; margin-top: 0; font-size: 1.8rem; }
+
+        /* Стилі для вкладок/меню */
+        .levels-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .level-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid transparent;
+            padding: 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+        }
+
+        .level-btn:hover { background: rgba(56, 189, 248, 0.2); border-color: #38bdf8; }
+        .level-btn span { display: block; font-size: 1.2rem; font-weight: bold; }
+        .level-btn small { color: #94a3b8; }
+
+        /* Секція гри (спочатку прихована) */
+        #game-section { display: none; }
+
+        .verb-v1 { font-size: 2.8rem; font-weight: 800; margin: 10px 0; }
+        .translation { color: #94a3b8; margin-bottom: 25px; font-size: 1.1rem; }
+
+        input {
             width: 100%;
+            padding: 14px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid #334155;
+            border-radius: 10px;
+            color: white;
+            margin-bottom: 15px;
+            font-size: 1rem;
+            outline: none;
+            box-sizing: border-box;
         }
 
-        table {
+        input:focus { border-color: #38bdf8; box-shadow: 0 0 10px rgba(56, 189, 248, 0.3); }
+
+        .btn-main {
+            background: #38bdf8;
+            color: #0f172a;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
             width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        th {
-            color: #38bdf8;
+            cursor: pointer;
+            font-size: 1rem;
             text-transform: uppercase;
-            font-size: 0.9rem;
         }
 
-        tr:hover {
-            background: rgba(255, 255, 255, 0.02);
+        .btn-back {
+            background: transparent;
+            color: #94a3b8;
+            border: none;
+            margin-top: 15px;
+            cursor: pointer;
+            text-decoration: underline;
         }
+
+        .result { margin-top: 15px; font-weight: bold; min-height: 24px; }
+        .correct { color: #4ade80; }
+        .wrong { color: #f87171; }
     </style>
 </head>
 <body>
 
-    <h1>Irregular Verbs</h1>
-
-    <div class="container">
-        <table>
-            <thead>
-                <tr>
-                    <th>Infinitive (V1)</th>
-                    <th>Past Simple (V2)</th>
-                    <th>Past Participle (V3)</th>
-                    <th>Translation</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Be</td>
-                    <td>Was / Were</td>
-                    <td>Been</td>
-                    <td>Бути</td>
-                </tr>
-                <tr>
-                    <td>Begin</td>
-                    <td>Began</td>
-                    <td>Begun</td>
-                    <td>Починати</td>
-                </tr>
-                <tr>
-                    <td>Do</td>
-                    <td>Did</td>
-                    <td>Done</td>
-                    <td>Робити</td>
-                </tr>
-                <tr>
-                    <td>Go</td>
-                    <td>Went</td>
-                    <td>Gone</td>
-                    <td>Йти</td>
-                </tr>
-                </tbody>
-        </table>
+<div class="container">
+    <div id="menu-section">
+        <h1>Обери рівень</h1>
+        <div class="levels-grid">
+            <div class="level-btn" onclick="startGame(1)">
+                <span>Рівень 1</span>
+                <small>Базові (do, go...)</small>
+            </div>
+            <div class="level-btn" onclick="startGame(2)">
+                <span>Рівень 2</span>
+                <small>Середні (keep, feel...)</small>
+            </div>
+            <div class="level-btn" onclick="startGame(3)">
+                <span>Рівень 3</span>
+                <small>Просунуті (rise, shake...)</small>
+            </div>
+            <div class="level-btn" onclick="startGame(4)">
+                <span>Рівень 4</span>
+                <small>Hardcore (dwell, slay...)</small>
+            </div>
+        </div>
     </div>
+
+    <div id="game-section">
+        <h1 id="level-title">Рівень 1</h1>
+        <div class="verb-v1" id="v1-display">Go</div>
+        <div class="translation" id="trans-display">йти</div>
+
+        <input type="text" id="v2-input" placeholder="Past Simple (V2)" autocomplete="off">
+        <input type="text" id="v3-input" placeholder="Past Participle (V3)" autocomplete="off">
+
+        <button class="btn-main" onclick="checkAnswer()">Запустити перевірку</button>
+        <div class="result" id="result-message"></div>
+        
+        <button class="btn-back" onclick="showMenu()">← Назад до меню</button>
+    </div>
+</div>
+
+<script>
+    // База дієслів по рівнях
+    const levels = {
+        1: [
+            { v1: "Be", v2: "was", v3: "been", trans: "бути" },
+            { v1: "Do", v2: "did", v3: "done", trans: "робити" },
+            { v1: "Go", v2: "went", v3: "gone", trans: "йти" },
+            { v1: "Eat", v2: "ate", v3: "eaten", trans: "їсти" }
+        ],
+        2: [
+            { v1: "Build", v2: "built", v3: "built", trans: "будувати" },
+            { v1: "Feel", v2: "felt", v3: "felt", trans: "відчувати" },
+            { v1: "Keep", v2: "kept", v3: "kept", trans: "тримати" },
+            { v1: "Sleep", v2: "slept", v3: "slept", trans: "спати" }
+        ],
+        3: [
+            { v1: "Rise", v2: "rose", v3: "risen", trans: "підніматися" },
+            { v1: "Shake", v2: "shook", v3: "shaken", trans: "трусити" },
+            { v1: "Freeze", v2: "froze", v3: "frozen", trans: "замерзати" },
+            { v1: "Steal", v2: "stole", v3: "stolen", trans: "красти" }
+        ],
+        4: [
+            { v1: "Slay", v2: "slew", v3: "slain", trans: "вбивати" },
+            { v1: "Dwell", v2: "dwelt", v3: "dwelt", trans: "мешкати" },
+            { v1: "Weave", v2: "wove", v3: "woven", trans: "плести" },
+            { v1: "Strive", v2: "strove", v3: "striven", trans: "прагнути" }
+        ]
+    };
+
+    let currentLevelData = [];
+    let currentVerb = {};
+
+    function startGame(level) {
+        currentLevelData = levels[level];
+        document.getElementById('level-title').innerText = `Рівень ${level}`;
+        document.getElementById('menu-section').style.display = 'none';
+        document.getElementById('game-section').style.display = 'block';
+        nextVerb();
+    }
+
+    function showMenu() {
+        document.getElementById('menu-section').style.display = 'block';
+        document.getElementById('game-section').style.display = 'none';
+    }
+
+    function nextVerb() {
+        const randomIndex = Math.floor(Math.random() * currentLevelData.length);
+        currentVerb = currentLevelData[randomIndex];
+        document.getElementById('v1-display').innerText = currentVerb.v1;
+        document.getElementById('trans-display').innerText = currentVerb.trans;
+        document.getElementById('v2-input').value = "";
+        document.getElementById('v3-input').value = "";
+        document.getElementById('result-message').innerText = "";
+    }
+
+    function checkAnswer() {
+        const v2 = document.getElementById('v2-input').value.trim().toLowerCase();
+        const v3 = document.getElementById('v3-input').value.trim().toLowerCase();
+        const result = document.getElementById('result-message');
+
+        if (v2 === currentVerb.v2.toLowerCase() && v3 === currentVerb.v3.toLowerCase()) {
+            result.className = "result correct";
+            result.innerText = "Точно! Наступне...";
+            setTimeout(nextVerb, 1200);
+        } else {
+            result.className = "result wrong";
+            result.innerText = `Не зовсім. Треба: ${currentVerb.v2}, ${currentVerb.v3}`;
+        }
+    }
+</script>
 
 </body>
 </html>
