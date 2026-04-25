@@ -3,212 +3,238 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Irregular Surfers</title>
+    <title>Irregular Surfers Pro</title>
     <style>
-        :root {
-            --primary: #38bdf8;
-            --bg: #0f172a;
-        }
+        :root { --primary: #38bdf8; --bg: #0f172a; --accent: #f87171; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: var(--bg); font-family: 'Segoe UI', sans-serif; color: white; touch-action: none; }
+        
+        .screen { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; background: var(--bg); z-index: 100; padding: 20px; }
+        .screen.active { display: flex; }
 
-        body, html {
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            overflow: hidden; background: var(--bg);
-            font-family: 'Segoe UI', sans-serif; color: white;
-            touch-action: none; /* Відключає зум при тапах */
-        }
+        h1 { color: var(--primary); text-shadow: 0 0 10px rgba(56,189,248,0.5); margin-bottom: 30px; }
 
-        #game-container {
-            position: relative; width: 100%; height: 100%;
-            display: flex; flex-direction: column; align-items: center;
-        }
+        /* Levels Grid */
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 100%; max-width: 400px; }
+        .level-card { background: rgba(255,255,255,0.05); border: 2px solid #334155; padding: 25px; border-radius: 15px; cursor: pointer; transition: 0.3s; position: relative; }
+        .level-card.locked { opacity: 0.5; cursor: not-allowed; }
+        .level-card.unlocked:hover { border-color: var(--primary); transform: scale(1.05); }
+        .lock-icon { position: absolute; top: 10px; right: 10px; font-size: 0.8rem; }
 
-        /* Дорога (ефект руху) */
-        .road {
-            position: absolute; bottom: 0; width: 300px; height: 100%;
-            background: linear-gradient(to bottom, #1e293b 0%, #334155 100%);
-            border-left: 4px solid var(--primary); border-right: 4px solid var(--primary);
-            overflow: hidden;
-        }
+        /* Buttons */
+        .btn { background: var(--primary); color: var(--bg); border: none; padding: 15px 40px; border-radius: 30px; font-weight: bold; font-size: 1.1rem; cursor: pointer; margin: 10px; width: 200px; }
+        .btn-secondary { background: transparent; color: white; border: 2px solid white; }
 
-        .lane-line {
-            position: absolute; left: 50%; transform: translateX(-50%);
-            width: 2px; height: 100%; background: rgba(255,255,255,0.1);
-        }
+        /* Study Table */
+        .study-list { width: 100%; max-width: 500px; overflow-y: auto; background: rgba(255,255,255,0.05); border-radius: 15px; padding: 10px; height: 60vh; }
+        .word-row { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.9rem; }
 
-        /* Гравець */
-        #player {
-            position: absolute; bottom: 50px; width: 60px; height: 80px;
-            background: var(--primary); border-radius: 10px;
-            transition: left 0.2s ease-out; transform: translateX(-50%);
-            box-shadow: 0 0 20px var(--primary);
-            z-index: 10;
-        }
-
-        /* Об'єкти (слова) */
-        .word-obj {
-            position: absolute; width: 80px; text-align: center;
-            font-weight: bold; font-size: 1.2rem; transform: translateX(-50%);
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-        }
-
-        /* Інтерфейс */
-        #ui {
-            position: absolute; top: 20px; width: 90%;
-            display: flex; justify-content: space-between; z-index: 100;
-        }
-
-        #target-verb {
-            position: absolute; top: 80px; font-size: 2rem;
-            color: var(--primary); font-weight: 800; text-align: center;
-        }
-
-        #menu {
-            position: absolute; inset: 0; background: rgba(15, 23, 42, 0.9);
-            display: flex; flex-direction: column; justify-content: center;
-            align-items: center; z-index: 200;
-        }
-
-        .btn {
-            background: var(--primary); color: var(--bg);
-            border: none; padding: 15px 40px; border-radius: 30px;
-            font-weight: bold; font-size: 1.2rem; cursor: pointer; margin: 10px;
-        }
-
-        .lives { color: #f87171; font-size: 1.5rem; }
+        /* Game Elements */
+        #game-area { position: relative; width: 100%; height: 100%; display: none; }
+        .road { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 300px; height: 100%; background: #1e293b; border-left: 4px solid var(--primary); border-right: 4px solid var(--primary); overflow: hidden; }
+        #player { position: absolute; bottom: 50px; width: 60px; height: 80px; background: var(--primary); border-radius: 10px; transition: left 0.15s; transform: translateX(-50%); z-index: 10; box-shadow: 0 0 15px var(--primary); }
+        .word-obj { position: absolute; width: 80px; text-align: center; font-weight: bold; transform: translateX(-50%); font-size: 1.2rem; }
+        #ui-layer { position: absolute; top: 20px; width: 100%; display: flex; flex-direction: column; align-items: center; pointer-events: none; }
+        #target-text { font-size: 2rem; font-weight: 800; color: var(--primary); margin-top: 50px; }
     </style>
 </head>
 <body>
 
-<div id="game-container">
-    <div id="ui">
-        <div id="score">Score: 0</div>
-        <div class="lives" id="lives">♥♥♥</div>
+    <div id="levels-screen" class="screen active">
+        <h1>LEVELS</h1>
+        <div class="grid" id="levels-grid"></div>
     </div>
 
-    <div id="target-verb">PRESS START</div>
-
-    <div class="road">
-        <div class="lane-line"></div>
-        <div id="player" style="left: 50%;"></div>
-        <div id="words-layer"></div>
+    <div id="action-screen" class="screen">
+        <h1 id="selected-level-title">Рівень 1</h1>
+        <button class="btn" onclick="initGame()">ГРАТИ</button>
+        <button class="btn btn-secondary" onclick="showStudy()">ВИВЧИТИ СЛОВА</button>
+        <button onclick="showScreen('levels-screen')" style="background:none; border:none; color:gray; cursor:pointer; margin-top:20px;">← Назад</button>
     </div>
 
-    <div id="menu">
-        <h1>IRREGULAR SURFERS</h1>
-        <button class="btn" onclick="startGame()">START GAME</button>
-        <p style="color: #94a3b8; font-size: 0.8rem;">PC: Arrows | Mobile: Tap Sides</p>
+    <div id="study-screen" class="screen">
+        <h1>СЛОВНИК</h1>
+        <div class="study-list" id="study-list"></div>
+        <button class="btn" onclick="showScreen('action-screen')">ЗРОЗУМІЛО</button>
     </div>
-</div>
+
+    <div id="game-area">
+        <div id="ui-layer">
+            <div id="game-stats">Score: 0 | Lives: <span id="lives-display">♥♥♥</span></div>
+            <div id="target-text">V2 of BE?</div>
+        </div>
+        <div class="road">
+            <div id="player" style="left: 150px;"></div>
+            <div id="words-layer"></div>
+        </div>
+    </div>
 
 <script>
-    const verbs = [
-        { v1: "Go", correct: "went", wrong: "goed" },
-        { v1: "Be", correct: "was", wrong: "beed" },
-        { v1: "Do", correct: "did", wrong: "done" },
-        { v1: "Have", correct: "had", wrong: "haved" },
-        { v1: "See", correct: "saw", wrong: "seen" }
-    ];
+    const allLevels = {
+        1: { name: "Beginner", verbs: [
+            { v1: "Be", v2: "was", v3: "been", trans: "бути" },
+            { v1: "Do", v2: "did", v3: "done", trans: "робити" },
+            { v1: "Go", v2: "went", v3: "gone", trans: "йти" }
+        ]},
+        2: { name: "Junior", verbs: [
+            { v1: "Buy", v2: "bought", v3: "bought", trans: "купувати" },
+            { v1: "Feel", v2: "felt", v3: "felt", trans: "відчувати" },
+            { v1: "Keep", v2: "kept", v3: "kept", trans: "тримати" }
+        ]},
+        3: { name: "Middle", verbs: [
+            { v1: "Freeze", v2: "froze", v3: "frozen", trans: "замерзати" },
+            { v1: "Shake", v2: "shook", v3: "shaken", trans: "трясти" },
+            { v1: "Steal", v2: "stole", v3: "stolen", trans: "красти" }
+        ]},
+        4: { name: "Pro", verbs: [
+            { v1: "Slay", v2: "slew", v3: "slain", trans: "вбивати" },
+            { v1: "Strive", v2: "strove", v3: "striven", trans: "прагнути" },
+            { v1: "Dwell", v2: "dwelt", v3: "dwelt", trans: "мешкати" }
+        ]}
+    };
 
-    let gameState = "menu";
-    let score = 0;
-    let lives = 3;
-    let playerLane = 1; // 0: left, 1: center, 2: right
+    let unlockedLevel = 1;
+    let currentLevel = 1;
+    let gameScore = 0;
+    let gameLives = 3;
+    let playerLane = 1; // 0, 1, 2
+    let gameActive = false;
     let speed = 4;
-    let gameLoop;
+    const lanes = [75, 150, 225];
 
-    const lanes = [75, 150, 225]; // координати центрів колій
+    function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById('game-area').style.display = 'none';
+        if(id === 'game-area') document.getElementById(id).style.display = 'block';
+        else document.getElementById(id).classList.add('active');
+    }
 
-    // Керування (ПК)
-    document.addEventListener('keydown', (e) => {
-        if (e.key === "ArrowLeft" && playerLane > 0) playerLane--;
-        if (e.key === "ArrowRight" && playerLane < 2) playerLane++;
-        updatePlayerPosition();
-    });
-
-    // Керування (Телефон - Тапи)
-    document.addEventListener('touchstart', (e) => {
-        const x = e.touches[0].clientX;
-        if (x < window.innerWidth / 2) {
-            if (playerLane > 0) playerLane--;
-        } else {
-            if (playerLane < 2) playerLane++;
+    function renderLevels() {
+        const grid = document.getElementById('levels-grid');
+        grid.innerHTML = '';
+        for(let i=1; i<=4; i++) {
+            const isLocked = i > unlockedLevel;
+            const div = document.createElement('div');
+            div.className = `level-card ${isLocked ? 'locked' : 'unlocked'}`;
+            div.innerHTML = `<span>Рівень ${i}</span><br><small>${allLevels[i].name}</small>`;
+            if(isLocked) div.innerHTML += `<span class="lock-icon">🔒</span>`;
+            div.onclick = () => { if(!isLocked) selectLevel(i); };
+            grid.appendChild(div);
         }
-        updatePlayerPosition();
-    });
-
-    function updatePlayerPosition() {
-        document.getElementById('player').style.left = lanes[playerLane] + 'px';
     }
 
-    function startGame() {
-        gameState = "play";
-        score = 0;
-        lives = 3;
-        speed = 4;
-        document.getElementById('menu').style.display = 'none';
-        document.getElementById('score').innerText = `Score: ${score}`;
-        document.getElementById('lives').innerText = "♥♥♥";
-        spawnPair();
-        gameLoop = setInterval(update, 20);
+    function selectLevel(lvl) {
+        currentLevel = lvl;
+        document.getElementById('selected-level-title').innerText = `Рівень ${lvl}: ${allLevels[lvl].name}`;
+        showScreen('action-screen');
     }
 
-    function spawnPair() {
+    function showStudy() {
+        const list = document.getElementById('study-list');
+        list.innerHTML = '';
+        allLevels[currentLevel].verbs.forEach(v => {
+            list.innerHTML += `<div class="word-row"><b>${v.v1}</b> <span>${v.v2} | ${v.v3}</span> <i>${v.trans}</i></div>`;
+        });
+        showScreen('study-screen');
+    }
+
+    function initGame() {
+        showScreen('game-area');
+        gameScore = 0; gameLives = 3; speed = 4 + currentLevel;
+        gameActive = true;
+        updateUI();
+        spawnObstacle();
+        requestAnimationFrame(gameLoop);
+    }
+
+    function spawnObstacle() {
+        if(!gameActive) return;
+        const verbs = allLevels[currentLevel].verbs;
         const verb = verbs[Math.floor(Math.random() * verbs.length)];
-        document.getElementById('target-verb').innerText = `V2 of ${verb.v1}?`;
+        const isV3 = Math.random() > 0.5;
+        const correct = isV3 ? verb.v3 : verb.v2;
+        document.getElementById('target-text').innerText = `${isV3 ? 'V3' : 'V2'} of ${verb.v1}?`;
 
-        const isCorrectLeft = Math.random() > 0.5;
-        createWord(verb.correct, isCorrectLeft ? 0 : 2, true);
-        createWord(verb.wrong, isCorrectLeft ? 2 : 0, false);
+        const correctLane = Math.floor(Math.random() * 3);
+        createWord(correct, correctLane, true);
+
+        // Додаємо фейкове слово на іншу колію
+        let wrongLane = Math.floor(Math.random() * 3);
+        while(wrongLane === correctLane) wrongLane = Math.floor(Math.random() * 3);
+        createWord(verb.v1 + "ed", wrongLane, false);
     }
 
-    function createWord(text, lane, isCorrect) {
+    function createWord(text, lane, correct) {
         const el = document.createElement('div');
         el.className = 'word-obj';
         el.innerText = text;
         el.style.top = '-50px';
         el.style.left = lanes[lane] + 'px';
         el.dataset.lane = lane;
-        el.dataset.correct = isCorrect;
+        el.dataset.correct = correct;
         document.getElementById('words-layer').appendChild(el);
     }
 
-    function update() {
-        const words = document.getElementsByClassName('word-obj');
-        for (let word of Array.from(words)) {
-            let top = parseInt(word.style.top);
+    function gameLoop() {
+        if(!gameActive) return;
+        const objects = document.querySelectorAll('.word-obj');
+        objects.forEach(obj => {
+            let top = parseFloat(obj.style.top);
             top += speed;
-            word.style.top = top + 'px';
+            obj.style.top = top + 'px';
 
-            // Перевірка зіткнення
-            if (top > window.innerHeight - 130 && top < window.innerHeight - 50) {
-                if (parseInt(word.dataset.lane) === playerLane) {
-                    if (word.dataset.correct === "true") {
-                        score += 10;
-                        document.getElementById('score').innerText = `Score: ${score}`;
-                        speed += 0.1;
+            // Collision
+            if(top > window.innerHeight - 130 && top < window.innerHeight - 50) {
+                if(parseInt(obj.dataset.lane) === playerLane) {
+                    if(obj.dataset.correct === "true") {
+                        gameScore += 10;
+                        if(gameScore >= 50 && currentLevel === unlockedLevel && unlockedLevel < 4) {
+                            unlockedLevel++;
+                            renderLevels();
+                        }
                     } else {
-                        lives--;
-                        document.getElementById('lives').innerText = "♥".repeat(lives);
+                        gameLives--;
                     }
-                    word.remove();
-                    if (lives <= 0) gameOver();
-                    else spawnPair();
+                    cleanupAndNext();
                 }
             }
+            if(top > window.innerHeight) obj.remove();
+        });
 
-            if (top > window.innerHeight) word.remove();
+        if(gameLives <= 0) {
+            alert("Кінець гри! Твій рахунок: " + gameScore);
+            gameActive = false;
+            showScreen('levels-screen');
+        } else {
+            updateUI();
+            requestAnimationFrame(gameLoop);
         }
     }
 
-    function gameOver() {
-        clearInterval(gameLoop);
-        gameState = "menu";
-        document.getElementById('menu').style.display = 'flex';
-        document.getElementById('menu').innerHTML = `<h1>GAME OVER</h1><p>Score: ${score}</p><button class="btn" onclick="location.reload()">RETRY</button>`;
+    function cleanupAndNext() {
+        document.getElementById('words-layer').innerHTML = '';
+        spawnObstacle();
     }
 
-    updatePlayerPosition();
-</script>
+    function updateUI() {
+        document.getElementById('lives-display').innerText = "♥".repeat(gameLives);
+        document.getElementById('game-stats').innerText = `Score: ${gameScore} | Lives: ${"♥".repeat(gameLives)}`;
+    }
 
+    // Controls
+    window.addEventListener('keydown', e => {
+        if(e.key === "ArrowLeft" && playerLane > 0) playerLane--;
+        if(e.key === "ArrowRight" && playerLane < 2) playerLane++;
+        document.getElementById('player').style.left = lanes[playerLane] + 'px';
+    });
+
+    window.addEventListener('touchstart', e => {
+        const x = e.touches[0].clientX;
+        if(x < window.innerWidth / 2 && playerLane > 0) playerLane--;
+        else if(x > window.innerWidth / 2 && playerLane < 2) playerLane++;
+        document.getElementById('player').style.left = lanes[playerLane] + 'px';
+    });
+
+    renderLevels();
+</script>
 </body>
 </html>
